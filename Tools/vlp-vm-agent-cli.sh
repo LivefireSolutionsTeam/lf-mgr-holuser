@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#  29-April 2025 # Apply shellcheck fixes
 AGENT_URL="https://content.labplatform.vmware.com/api/storage/file/NEE/agent/vlp-agent-"
 
 AGENT_DIR=vlp-agent
@@ -112,7 +112,7 @@ operation_install() {
     echo $HR
 
     echo "Entering directory $AGENT_DIR."
-    cd $AGENT_DIR
+    cd $AGENT_DIR || exit
     echo $HR
 
     # Download JRE if doesn't exist
@@ -130,19 +130,19 @@ operation_install() {
     AGENT_NAME=vlp-agent-$AGENT_VERSION.jar
 
     # If no agent version is provided remove 'latest' version to ensure it will always get updated
-    if [ $AGENT_VERSION == "latest" ]; then
-        if [ -f $AGENT_NAME ]; then
-            rm -rf $AGENT_NAME
+    if [ "$AGENT_VERSION" == "latest" ]; then
+        if [ -f "$AGENT_NAME" ]; then
+            rm -rf "$AGENT_NAME"
         fi
     fi
 
     # Download JAR file if doesn't exist
     echo "Downloading Agent version $AGENT_VERSION"
-    if [ ! -f $AGENT_NAME ]; then
+    if [ ! -f "$AGENT_NAME" ]; then
         url="$AGENT_URL$AGENT_VERSION.jar"
         if curl --output /dev/null --silent --head --fail "$url"; then
-            curl -o $AGENT_NAME $url
-            chmod +x $AGENT_NAME
+            curl -o "$AGENT_NAME" "$url"
+            chmod +x "$AGENT_NAME"
         else
             echo "Agent version not found: $AGENT_VERSION"
             exit 1
@@ -153,9 +153,9 @@ operation_install() {
 
     echo $HR
 
-    if [ $PLATFORM == "linux*" ]; then
+    if [ "$PLATFORM" == "linux*" ]; then
         START_COMMAND="$AGENT_JAVA_HOME -jar $AGENT_NAME --spring.profiles.active=prod --logging.level.com.vmwlp.egwagent=DEBUG 2>&1 > "vlp-agent.log"  &"
-        STOP_COMMAND="kill -9 $(pidof java | grep -F $AGENT_NAME)"
+        STOP_COMMAND="kill -9 $(pidof java | grep -F "$AGENT_NAME")"
     else
         START_COMMAND="nohup $AGENT_JAVA_HOME -jar $AGENT_NAME --spring.profiles.active=prod --logging.level.com.vmwlp.egwagent=DEBUG 2>&1 > "vlp-agent.log"  &"
         STOP_COMMAND="pkill -f 'java -jar $AGENT_NAME'"

@@ -1,7 +1,7 @@
 #!/usr/bin/sh
-
+#  29-April 2025 # Apply shellcheck fixes
 # kill parent labstartup.py process
-lproc=`ps -ef | grep python | grep labstartup.py | awk '{print $2}'`
+lproc=$(ps -ef | grep python | grep labstartup.py | awk '{print $2}')
 if [ "${lproc}" ];then
    echo "Killing parent labstartup.py process: $lproc"
    kill $lproc
@@ -11,7 +11,7 @@ else
 fi
 
 # then kill child process
-cproc=`ps -ef | grep python | grep Startup | awk '{print $2}'`
+cproc=$(ps -ef | grep python | grep Startup | awk '{print $2}')
 if [ "${cproc}" ];then
    echo "Killing labstartup child process: $cproc"
    kill $cproc

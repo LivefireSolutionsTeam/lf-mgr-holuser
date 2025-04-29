@@ -1,6 +1,6 @@
 #! /bin/sh
 # version 1.2 - 20-February 2025
-
+#  29-April 2025 # Apply shellcheck fixes
 # the only job of this script is to do the initial Core Team git pull
 # and then call the lastest versions of VLPagent.sh and labstartup.sh
 
@@ -15,10 +15,10 @@ cd /home/holuser/hol
 
 hol="/home/holuser"
 
-proxyready=`nmap -p 3128 proxy | grep open`
+proxyready=$(nmap -p 3128 proxy | grep open)
 while [ $? != 0 ];do
    echo "Waiting for proxy to be ready..." >> ${logfile}
-   proxyready=`nmap -p 3128 proxy | grep open`
+   proxyready=$(nmap -p 3128 proxy | grep open)
    sleep 1
 done
 
@@ -33,15 +33,15 @@ while true;do
       > /tmp/coregitdone
       break
    else
-      gitresult=`grep 'could not be found' ${logfile}`
+      gitresult=$(grep 'could not be found' ${logfile})
       if [ $? = 0 ];then
          echo "The git project ${gitproject} does not exist." >> ${logfile}
-         echo "FAIL - No GIT Project" > $startupstatus
+         echo "FAIL - No GIT Project" > "$startupstatus"
          exit 1
       else
          echo "Could not complete git pull. Will try again." >> ${logfile}
       fi
   fi
-  ctr=`expr $ctr + 1`
+  ctr=$(expr $ctr + 1)
   sleep 5
 done
