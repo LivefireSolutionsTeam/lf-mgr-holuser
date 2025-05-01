@@ -111,7 +111,7 @@ while true;do
 done
 
 # start the VLP Agent in prod if not already running
-startagent=$(ps -ef | grep VLPagent.sh | grep -v grep)
+startagent=$(pgrep -f VLPagent.sh)          # $(ps -ef | grep VLPagent.sh | grep -v grep)
 if [ "${startagent}" = "" ];then
    cloud=`/usr/bin/vmtoolsd --cmd "info-get guestinfo.ovfenv" 2>&1 | grep vlp_org_name | cut -f3 -d: | cut -f2 -d\\`
    if [ "${cloud}" = "" ];then
