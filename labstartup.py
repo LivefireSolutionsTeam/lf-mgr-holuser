@@ -56,6 +56,9 @@ lsf.startup('ESXi')
 # verify VCF components
 lsf.startup('VCF')
 
+# verify VCF components
+lsf.startup('VVF')
+
 # verify vCenter and start nested VMs
 lsf.startup('vSphere')
 

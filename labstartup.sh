@@ -5,7 +5,7 @@ git_pull() {
    cd "$1" || exit
    ctr=0
    # stash uncommitted changes if not running in HOL-Dev
-   if [ $branch = "master" ];then
+   if [ $branch = "main" ];then
        echo "git stash local changes for prod." >> ${logfile}
        git stash >> ${logfile}
    else
@@ -37,6 +37,7 @@ git_pull() {
 
 git_clone() {
   cd "$1" || exit
+  echo "$1"
   git init >> ${logfile}
   git remote add origin "$gitproject" >> ${logfile}
   echo "Performing git clone for repo ${vpodgit}" >> ${logfile}
@@ -145,6 +146,8 @@ if [ -f "${mcholroot}"/vPod.txt ];then
    labtype=$(grep labtype /tmp/vPod.txt | cut -f2 -d '=' | sed 's/\r$//' | xargs)
    if [ "$labtype" != "HOL" ];then
       cp ${holroot}/holodeck/defaultconfig.ini ${configini}
+      vPod_SKU=$(grep vPod_SKU /tmp/vPod.txt | cut -f2 -d '=' | sed 's/\r$//' | xargs)
+      cat ${holroot}/holodeck/defaultconfig.ini | sed s/HOL-BADSKU/"${vPod_SKU}"/ > ${configini}
    fi
 else
    echo "No vPod.txt on Main Console. Abort." >> ${logfile}

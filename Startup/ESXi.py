@@ -1,4 +1,4 @@
-# vSphere.py version 1.9 07-April 2025
+# ESXi.py version 1.11 28-April 2025
 import datetime
 import os
 import sys
@@ -38,11 +38,19 @@ if esx_hosts:
     for entry in esx_hosts:
         (host, mm) = entry.split(':')
         while True:
-            if lsf.test_ping(host):
-                break # go on to the next host
+            if lsf.labtype == "HOL":
+                if lsf.test_esx(host):
+                    break # go on to the next host
+                else:
+                    lsf.write_output(f'Unable to test {host}. FAIL')
+                    lsf.write_vpodprogress(f'{host} TIMEOUT', 'TIMEOUT', color=color)
             else:
-                lsf.write_output(f'Unable to test {host}. FAIL')
-                lsf.write_vpodprogress(f'{host} TIMEOUT', 'TIMEOUT', color=color)
+                if lsf.test_ping(host):
+                    break # go on to the next host
+                else:
+                    lsf.write_output(f'Unable to test {host}. FAIL')
+                    lsf.write_vpodprogress(f'{host} TIMEOUT', 'TIMEOUT', color=color)
+
 
 
 
