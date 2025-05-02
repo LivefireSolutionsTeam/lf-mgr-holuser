@@ -8,6 +8,7 @@ if [ ! -f ~holuser/rtrcreds.txt ]; then
 fi
 
 pwd=$(pwd)
+cd "$HOME" || exit
 
 # remove the current folder in order to clone the correct repo
 autocheckdir=~holuser/autocheck
@@ -41,6 +42,7 @@ pwsh -Command 'Set-PowerCLIConfiguration -DefaultVIServerMode multiple -Confirm:
 #DefaultServerMode parameter of Set-PowerCLIConfiguration
 
 echo "Starting autocheck..."
+cd $autocheckdir || exit
 pwsh -File autocheck.ps1 | tee ~holuser/hol/AutoCheck.log
 
 cd "$pwd" || exit
