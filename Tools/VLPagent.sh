@@ -1,6 +1,5 @@
 #!/bin/sh
-# version 1.7 - 03-December 2024
-#  29-April 2025 # Apply shellcheck fixes
+# version 1.8 - 03-December 2024 #  29-April 2025 # Apply shellcheck fixes
 
 get_vpod_repo() {
    # labstartup.sh creates the vPod_SKU.txt file
@@ -17,8 +16,6 @@ get_vpod_repo() {
 . /home/holuser/noproxy.sh
 
 logfile='/tmp/VLPagentsh.log'
-# delete this one if present
-egwagent='/home/holuser/hol/Tools/egw-agent-1.0.0.jar'
 # install this version
 vlpagentversion='1.0.6'
 
@@ -28,13 +25,6 @@ prepopstartscript=prepopstart.sh
 labstart=/tmp/labstart.txt
 labstartscript=labstart.sh
 vlpagentdir=/home/holuser/hol/vlp-agent
-
-# cleanup some leftover dev files
-[ -f /home/holuser/egwagent/labactive.sh ] && rm /home/holuser/egwagent/labactive.sh
-[ -f /home/holuser/egwagent/empty.sh ] && rm /home/holuser/egwagent/empty.sh
-[ -f /home/holuser/egwagent/test_create_file.sh ] && rm /home/holuser/egwagent/test_create_file.sh
-
-[ -f ${egwagent} ] && rm ${egwagent}
 
 # clean up old vlp-agent jar files if present
 jars=$(ls ${vlpagentdir}/vlp-agent-*.jar)
@@ -80,7 +70,7 @@ while true;do
          kill "${pid}"
       fi
       # active lab so delete the scheduled labcheck
-      for i in $(atq | awk '{print $1}');do atrm $i;done
+      for i in $(atq | awk '{print $1}');do atrm "$i";done
       
       # note that this will run everytime the console opens
       echo "Received lab start notification. Running ${vpodgitdir}/${labstartscript}" >> ${logfile}
