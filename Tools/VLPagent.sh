@@ -1,12 +1,10 @@
 #!/bin/sh
-# version 1.8 - 03-December 2024 #  29-April 2025 # Apply shellcheck fixes
+# version 1.11 - 05-May 2025
 
 get_vpod_repo() {
-   # labstartup.sh creates the vPod_SKU.txt file
-   vPod_SKU=$(cat /tmp/vPod_SKU.txt)
    # calculate the git repo based on the vPod_SKU
-   year=$(echo "${vPod_SKU}" | cut -c5-6)
-   index=$(echo "${vPod_SKU}" | cut -c7-8)
+   year=$(echo ${vPod_SKU} | cut -c5-6)
+   index=$(echo ${vPod_SKU} | cut -c7-8)
    yearrepo="${gitdrive}/20${year}-labs"
    vpodgitdir="${yearrepo}/${year}${index}"
 }
@@ -16,8 +14,21 @@ get_vpod_repo() {
 . /home/holuser/noproxy.sh
 
 logfile='/tmp/VLPagentsh.log'
+
+
+# labstartup.sh creates the vPod_SKU.txt file
+vPod_SKU=$(cat /tmp/vPod_SKU.txt)
 # install this version
-vlpagentversion='1.0.6'
+if [ ${vPod_SKU} = "HOL-2535" ];then
+   vlpagentversion='1.0.6'  # could use a different version in this case
+   # overwrite logfile on first write
+   echo "Using special VLP Agent version ${vlpagentversion} for ${vPod_SKU}" > $logfile
+else
+   vlpagentversion='1.0.6'
+   # overwrite logfile on first write
+   echo "Using special VLP Agent version ${vlpagentversion} for ${vPod_SKU}" > $logfile
+fi
+
 
 gitdrive=/vpodrepo
 prepopstart=/tmp/prepop.txt
@@ -29,7 +40,7 @@ vlpagentdir=/home/holuser/hol/vlp-agent
 # clean up old vlp-agent jar files if present
 jars=$(ls ${vlpagentdir}/vlp-agent-*.jar)
 for file in $jars;do
-   [ "$file" != ${vlpagentdir}/vlp-agent-${vlpagentversion}.jar ] && rm "$file"
+   [ $file != ${vlpagentdir}/vlp-agent-${vlpagentversion}.jar ] && rm $file
 done
 
 # install the VLP Agent (also installs the required JRE version)
@@ -58,25 +69,25 @@ while true;do
       # note that this will run at prepop start
       echo "Received prepop start notification. Running ${vpodgitdir}/${prepopstartscript}" >> ${logfile}
       # verify that the script files exists and is executable
-      if [ -f "${vpodgitdir}"/${prepopstartscript} ] && [ -x "${vpodgitdir}"/${prepopstartscript} ];then
-         /bin/sh "${vpodgitdir}"/${prepopstartscript}
+      if [ -f ${vpodgitdir}/${prepopstartscript} ] && [ -x ${vpodgitdir}/${prepopstartscript} ];then
+         /bin/sh ${vpodgitdir}/${prepopstartscript}
       fi
    elif [ -f ${labstart} ];then
       # if labcheck is running - kill it.
 	  pid=$(ps -ef | grep labstartup.py | grep -v grep | awk '{print $2}')
       if [ ! -z "${pid}" ];then
 	     echo "Stopping current LabStartup processes..." >> ${logfile}
-         pkill -P "${pid}"
-         kill "${pid}"
+         pkill -P ${pid}
+         kill ${pid}
       fi
       # active lab so delete the scheduled labcheck
-      for i in $(atq | awk '{print $1}');do atrm "$i";done
+      for i in $(atq | awk '{print $1}');do atrm $i;done
       
       # note that this will run everytime the console opens
       echo "Received lab start notification. Running ${vpodgitdir}/${labstartscript}" >> ${logfile}
       # verify that the script files exists and is executable
-      if [ -f "${vpodgitdir}"/${labstartscript} ] && [ -x "${vpodgitdir}"/${labstartscript} ];then
-         /bin/sh "${vpodgitdir}"/${labstartscript}
+      if [ -f ${vpodgitdir}/${labstartscript} ] && [ -x ${vpodgitdir}/${labstartscript} ];then
+         /bin/sh ${vpodgitdir}/${labstartscript}
       fi
    fi
    sleep 2
