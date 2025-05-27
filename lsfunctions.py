@@ -1,4 +1,4 @@
-# lsfunctions.py - version v2.5 - 07-April 2025
+# lsfunctions.py - version v2.8 - 07-May 2025
 # implementing standard naming, removing unneeded legacy code and simplifying where possible
 
 import os
@@ -251,7 +251,7 @@ def parse_labsku(sku):
     # get the labtype from /lmchol/hol/vPod.txt
     
 
-    if sku == bad_sku:
+    if sku == bad_sku and labtype == 'HOL':
         write_output(f'BAD SKU: {sku}')        
         write_output(f'LabStartup script on the Manager VM has not been implemented yet.')
         write_output(f'Please ask for assistance if you need it.')
@@ -921,7 +921,7 @@ def start_nested(records):
         vms = get_vm(e_name, vc=vc_name)
         if not vms:
             vms = get_vm_match(e_name)
-        if not vms:
+        if not vms and not va:
             write_output(f'Unable to find entity {e_name}')
             continue
         for vm in vms:
@@ -1290,14 +1290,18 @@ def scp(src, dst, pw, **kwargs):
     param pw: the password or '' if no password is needed?
     """
     lfile = kwargs.get('logfile', logfile)
+    recurse = kwargs.get('recurse', False)
     run = subprocess.CompletedProcess
     run.returncode = 1
     if pw == '':
         pw = password
     if '@' not in src and '@' not in dst:
         write_output('Local copy not allowed. Need user@host for source or destination.', logfile=lfile)
-        return
-    sshoptions = '-o StrictHostKeyChecking=accept-new'
+        return   
+    if recurse:
+        sshoptions = '-r -o StrictHostKeyChecking=accept-new'
+    else:
+        sshoptions = '-o StrictHostKeyChecking=accept-new'
     rcmd = f'/usr/bin/sshpass -p {pw} scp {sshoptions} {src} {dst}'  # 2>&1
     rcmdlist = rcmd.split()
     logging.debug(f'rcmd: {rcmd}')
