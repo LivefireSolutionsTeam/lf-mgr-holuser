@@ -28,7 +28,7 @@ while true;do
       echo "FATAL could not perform git pull." >> ${logfile}
       exit  # do we exit here or just report?
    fi
-   git pull origin master >> ${logfile} 2>&1
+   git pull origin main >> ${logfile} 2>&1
    if [ $? = 0 ];then
       > /tmp/coregitdone
       break
