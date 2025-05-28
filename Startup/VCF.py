@@ -97,11 +97,10 @@ if 'vcfnsxedges' in lsf.config['VCF'].keys():
     lsf.write_vpodprogress('VCF NSX Edges start', 'GOOD-3', color=color)
     vcfnsxedges = lsf.config.get('VCF', 'vcfnsxedges').split('\n')
     lsf.start_nested(vcfnsxedges)
-
-# is there a test we can do for the NSX Manager and Edges instead of sleeping?
-# DEBUG - skip this sleep for dev testing
-lsf.write_output("Pausing 5 minutes for NSX Edges to start...")
-lsf.labstartup_sleep(300)
+    # is there a test we can do for the NSX Manager and Edges instead of sleeping?
+    # DEBUG - skip this sleep for dev testing This pause should only take place if config has edges
+    lsf.write_output("Pausing 5 minutes for NSX Edges to start...")
+    lsf.labstartup_sleep(300)
 
 vcfvCenter = []
 if 'vcfvCenter' in lsf.config['VCF'].keys():
