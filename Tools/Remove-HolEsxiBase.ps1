@@ -8,42 +8,42 @@
 # and assumes a clean, unmodified deployment of these pods. It may work in other cases,
 # but it may also run into issues. 
 # 
-	# Version - 14-January 2025
+# Version - 14-January 2025
 # 
 # The script will
-	# * look for VMs on the host
-	# * put the host into maintenance mode
-	# * remove the FreeNAS iSCSI target from the iSCSI configuration
-	# * remove the host from the vDS
-	# * remove the host from vCenter inventory
-	# * remove the host from PuTTY sessions
-	# * comment out the host in C:\hol\Resources\EsxiHosts.txt
+# * look for VMs on the host
+# * put the host into maintenance mode
+# * remove the FreeNAS iSCSI target from the iSCSI configuration
+# * remove the host from the vDS
+# * remove the host from vCenter inventory
+# * remove the host from PuTTY sessions
+# * comment out the host in C:\hol\Resources\EsxiHosts.txt
 # 
 # .NOTES
 # 
 # Remove-HOLEsxiBase.ps1 - April 26, 2021
-	# * New: Waiting for running tasks to complete.
-	# * Updated: Error handling
-	# * New: If fail can usually run again successfully
-	# * New: Comments out the host from Resources\ESXiHosts.txt
+# * New: Waiting for running tasks to complete.
+# * Updated: Error handling
+# * New: If fail can usually run again successfully
+# * New: Comments out the host from Resources\ESXiHosts.txt
 # 
 # Remove-HOLEsxiBase.ps1 - March 24, 2021
-	# * New:  Modified the $adminUser preferences for Site A|B deployment prompts to use 
-		# administrator@vsphere2.local as an alternative option.  Adjusted host numbers,
-		# removed unnecessary 'Remove-Variable -Name 'r' line.
+# * New:  Modified the $adminUser preferences for Site A|B deployment prompts to use 
+# administrator@vsphere2.local as an alternative option.  Adjusted host numbers,
+# removed unnecessary 'Remove-Variable -Name 'r' line.
 # 
 # Remove-HolEsxiBase.ps1 - March 3, 2021
-	# * New: Added vSphere 7 login credentials 'administrator@vsphere.local' which is our
-		# standard at this time for new base templates as well as the vSphere 7 2020 vPod.
+# * New: Added vSphere 7 login credentials 'administrator@vsphere.local' which is our
+# standard at this time for new base templates as well as the vSphere 7 2020 vPod.
 # 
 # Remove-HolEsxiBase.ps1 - February 6, 2019 
-	# * New: Added admin credential selection generation and selection for vSphere 6.7+ pods
-	# * New: Find and remove the puTTY session matching the hostName
-	# * New: Provision to select different admin account name, based on pod configuration
+# * New: Added admin credential selection generation and selection for vSphere 6.7+ pods
+# * New: Find and remove the puTTY session matching the hostName
+# * New: Provision to select different admin account name, based on pod configuration
 # 
 # Remove-HolEsxiBase.ps1 - May 14, 2018 
-	# * New: Added "Sleeps" to let the hosts settle down before ripping apart the networking and
-		# the triggering the network health check/rollback function.
+# * New: Added "Sleeps" to let the hosts settle down before ripping apart the networking and
+# the triggering the network health check/rollback function.
 # 
 # 
 # .EXAMPLE
@@ -51,8 +51,8 @@
 # 
 # .INPUTS
 # Interactive: 
-	# * site [a|b]
-	# * comma-separated list of host numbers
+# * site [a|b]
+# * comma-separated list of host numbers
 # 
 # .OUTPUTS
 # 
@@ -82,8 +82,9 @@ Function waitForRunningTasks ( ) {
 If ( $isWindows ) { 
 	$labStartupRoot = 'C:\HOL'
 	$puttyPath = 'HKCU:\Software\SimonTatham\PuTTY\Sessions'
-	$plinkPath =  Join-Path $labStartupRoot 'Tools\plink.exe'
-} ElseIf ( $isLinux ) { 
+	$plinkPath = Join-Path $labStartupRoot 'Tools\plink.exe'
+}
+ElseIf ( $isLinux ) { 
 	$labStartupRoot = '/hol'
 	$sshPass = "/usr/bin/sshpass"
 	$sshOptions = "-o StrictHostKeyChecking=accept-new"
@@ -102,10 +103,10 @@ If ( $isLinux ) {
 	$lcmd = "hostname -A" # 2024: change to hostname -A
 	$fqdn = Invoke-Expression -Command $lcmd
 	$i = $fqdn.IndexOf(".")
-	$hostname = $fqdn.SubString(0,$i)
-	$tl = $fqdn.length -1
+	$hostname = $fqdn.SubString(0, $i)
+	$tl = $fqdn.length - 1
 	$dl = $tl - $hostname.length
-	$dom = $fqdn.SubString($i+1,$dl-1)
+	$dom = $fqdn.SubString($i + 1, $dl - 1)
 }
 
 $adminUser = 'administrator@vsphere.local'
@@ -129,20 +130,20 @@ If( !( Test-Path 'C:\Program Files\WindowsPowerShell\Modules\VMware.VimAutomatio
 #>
 
 # Disconnect from all vCenters to eliminate confusion
-If( ($global:DefaultVIServers).Count -gt 0 ) {
+If ( ($global:DefaultVIServers).Count -gt 0 ) {
 	Disconnect-VIserver * -Confirm:$false | Out-Null
 }
 
 #Determine whether we will work on site A or site B
 #Site A SSO is vsphere.local, Site B is vsphere2.local
 $site = ''
-While( ($site -ne 'a') -and ($site -ne 'b') -and ($site -ne 'q') ) {
+While ( ($site -ne 'a') -and ($site -ne 'b') -and ($site -ne 'q') ) {
 	$site = Read-Host "Enter the site (a|b) or 'q' to quit"
 	$site = $site.ToLower()
 }
-If( $site -eq 'q' ) { Return }
+If ( $site -eq 'q' ) { Return }
 
-If( $site -eq 'b' ) {
+If ( $site -eq 'b' ) {
 	$adminUser = 'administrator@vsphere2.local'
 }
 Else {
@@ -153,30 +154,30 @@ Write-Host "Using $adminUser"
 
 #Set this to the numbers of the hosts that you want to configure
 $numbers = Read-Host 'Host numbers as a comma-separated list (default=4,5,6)'
-If( $numbers -ne '' ) { 
-	$hostNumbers =  ($numbers.Split(',')) | %  { [int] $_ }
+If ( $numbers -ne '' ) { 
+	$hostNumbers = ($numbers.Split(',')) | % { [int] $_ }
 }
 Else {
 	#default to hosts 4-6
-	$hostNumbers = (4,5,6)
+	$hostNumbers = (4, 5, 6)
 	$numbers = '4,5,6'
 }
 
 # Generate the host names based on standard naming and entered numbers
 $hostNames = @()
-ForEach( $hostNumber in $hostNumbers ) { 
-	$hostNames += ("esx-{0:00}{1}.${dom}" -f $hostNumber,$site)
+ForEach ( $hostNumber in $hostNumbers ) { 
+	$hostNames += ("esx-{0:00}{1}.${dom}" -f $hostNumber, $site)
 }
 
 Write-Host "Ready to work on site $($site.ToUpper())"
-ForEach( $hostName in $hostNames ) {
+ForEach ( $hostName in $hostNames ) {
 	Write-Host "`t$hostName"
 }
-While( $answer -ne 'y' ) {
+While ( $answer -ne 'y' ) {
 	$answer = Read-Host "Confirm? [Y|n]"
 	$answer = $answer.ToLower()
-	If( $answer -eq '' ) { $answer = 'y' }
-	If( $answer -eq 'n' ) { Return }
+	If ( $answer -eq '' ) { $answer = 'y' }
+	If ( $answer -eq 'n' ) { Return }
 }
 
 $vCenterServer = "vcsa-01{0}.${dom}" -f $site
@@ -185,7 +186,8 @@ Try {
 	# DEV
 	Write-Host "Connect-VIserver $vCenterServer -username $adminUser -password $rootPassword"
 	Connect-VIserver $vCenterServer -username $adminUser -password $rootPassword -ErrorAction Stop -ErrorVariable errorVar
-} Catch {
+}
+Catch {
 	#Bail if the connection to vCenter does not work. Nothing else makes sense to try.
 	Write-Host -ForegroundColor Red "ERROR: Unable to connect to vCenter $vCenterServer $errorVar"
 	Return
@@ -196,7 +198,7 @@ Try {
 $dc = Get-Datacenter
 
 #Get the VDS -- there should only be one in the base pod
-$vdsName = "Region"+$site.ToUpper()+"01-vDS-COMP"
+$vdsName = "Region" + $site.ToUpper() + "01-vDS-COMP"
 $vds = Get-VDSwitch -Name $vdsName
 
 $ctr = 0
@@ -210,9 +212,10 @@ ForEach ($hostName in $hostNames) {
 	Try {
 		$vmhost = Get-VMHost -Location $dc -Name $hostName -ErrorAction SilentlyContinue
 		Write-Host -ForegroundColor Green "Working on $hostName"
-	} Catch {
-			Write-Host -ForegroundColor Yellow "`t$hostName is not present. Moving on..."
-			Continue
+	}
+ Catch {
+		Write-Host -ForegroundColor Yellow "`t$hostName is not present. Moving on..."
+		Continue
 	}
 
 	# Look for VMs registered on host, stop if found
@@ -221,7 +224,7 @@ ForEach ($hostName in $hostNames) {
 	
 	Write-Host("`tProceeding...")
 	
-	If( $virtmachines.Count -gt 1 ) {
+	If ( $virtmachines.Count -gt 1 ) {
 		Write-Host -ForegroundColor Red "VMs exist on host $hostName. Cannot continue."
 		Continue
 	}
@@ -248,7 +251,8 @@ ForEach ($hostName in $hostNames) {
 				Start-Sleep -Seconds 1
 				$vmhost = Get-VMHost -Name $hostName
 			}
-		} Catch {
+		}
+		Catch {
 			Write-Host -ForegroundColor Red "`t`t$hostName is unable to enter maintenance mode. Please try again. Error: $errorVar"
 			Continue
 		}
@@ -263,14 +267,15 @@ ForEach ($hostName in $hostNames) {
 	$iTarget = Get-IScsiHbaTarget -IScsiHba $iScsiHba
 	If ( $iTarget -ne "" ) {
 		$build = [int]$vmhost.build
-		If ( $build  -ge 17630552 ) {
+		If ( $build -ge 17630552 ) {
 			# run esxcli iscsi session remove -A $hbaName
 			$hbaName = ($vmhost | Get-VMHostHba -Type iScsi).Device
 			Write-Host "`t`tRemoving iSCSI session from $hbaName (~5 sec)"
 			$lcmd = "esxcli iscsi session remove -A $hbaName"
 			If ( $isWindows ) { 
 				$cmd = "Echo Y | $plinkPath -ssh $hostName -l root $lcmd  2>&1" 
-			} Elseif ( $isLinux ) {
+			}
+			Elseif ( $isLinux ) {
 				$cmd = "$sshPass -p $rootPassword ssh $sshOptions root@$hostName $lcmd 2>&1"
 			}
 			Write-Host "`t`tEnding iSCSI sessions on $hbaName... (~10 sec)"
@@ -293,7 +298,8 @@ ForEach ($hostName in $hostNames) {
 			}
 			Write-Host "`tPausing 30 seconds for $hostName to quiesce..."
 			Start-Sleep -Seconds 30
-		} Catch {
+		}
+		Catch {
 			Write-Host -ForegroundColor Yellow "`t`tRemove iSCSI targets not needed for $hostName. $errorVar"
 		}
 	}
@@ -305,13 +311,14 @@ ForEach ($hostName in $hostNames) {
 		$pNic1 = Get-VMHostNetworkAdapter -VMHost $vmhost -Physical -Name "vmnic1" -VirtualSwitch $vds -ErrorAction SilentlyContinue
 		If ( $pNic1 -eq $Null ) {
 			Write-Host -ForegroundColor Yellow "`t`tvmnic1 already removed from $vdsName."
-		} Else {
+		}
+		Else {
 			Write-Host "`t`tRemoving $hostName vmnic1 from $vdsName (~10 sec)"
 			Remove-VDSwitchPhysicalNetworkAdapter -VMHostNetworkAdapter $pNic1 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable errorVar
 			If ( -Not (waitForRunningTasks) ) {
-					Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic1 from $vdsName for $hostName. Please try again."
-					Continue
-				}
+				Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic1 from $vdsName for $hostName. Please try again."
+				Continue
+			}
 			$pNic1 = Get-VMHostNetworkAdapter -VMHost $vmhost -Physical -Name "vmnic1" -VirtualSwitch $vds -ErrorAction SilentlyContinue
 			If ( $pNic1 -ne $Null ) {				
 				Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic1 from $vdsName. Please try again. $errorVar"
@@ -320,11 +327,13 @@ ForEach ($hostName in $hostNames) {
 			Write-Host "`t`tPausing 10 seconds for $hostName to quiesce after removing vmmnic1..."
 			Start-Sleep -Seconds 10
 		}
-	} Catch {
+	}
+ Catch {
 		If ( $errorVar -Like "*disconnected*" ) {
 			Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic1 from $vdsName. Please try again. $errorVar"
 			Continue
-		} Else {
+		}
+		Else {
 			Write-Host -ForegroundColor Yellow "`t`tvmnic1 already removed from $vdsName."
 		}
 	} # Nothing to do since vmnic1 has already been removed
@@ -334,7 +343,8 @@ ForEach ($hostName in $hostNames) {
 		Write-Host "`t`tChecking $hostName for existing vSwitch"
 		$svs = Get-VirtualSwitch -Standard -VMHost $vmhost -Name $svsName -ErrorAction SilentlyContinue
 		If ( $svs -eq $Null ) {
-			Try {Write-Host "`t`tCreating new vSwitch $svsName on $hostName (~10 sec)"
+			Try {
+				Write-Host "`t`tCreating new vSwitch $svsName on $hostName (~10 sec)"
 				$pNic1 = Get-VMHostNetworkAdapter -VMHost $vmhost -Physical -Name "vmnic1" -ErrorAction SilentlyContinue
 				$svs = New-VirtualSwitch -VMHost $vmhost -Name $svsName -Nic $pNic1 -ErrorVariable errorVar -ErrorAction SilentlyContinue
 				If ( -Not (waitForRunningTasks) ) {
@@ -346,7 +356,8 @@ ForEach ($hostName in $hostNames) {
 					Write-Host -ForegroundColor Red "`t`tCould not create $svsName on $hostName. $errorVar"
 					Continue
 				}
-			} Catch {
+			}
+			Catch {
 				If ( $errorVar -Like "*busy*" ) {
 					Write-Host -ForegroundColor Red "`t`t$hostName is too busy. Please try again later. Error: $errorVar"
 					Continue
@@ -362,7 +373,8 @@ ForEach ($hostName in $hostNames) {
 				Write-Host -ForegroundColor Red "`t`tUnable to create new vSwitch on $hostName. Please try again."
 				Continue
 			}
-		} Catch {
+		}
+		Catch {
 			If ( $errorVar -Like "*busy*" ) {
 				Write-Host -ForegroundColor Red "`t`t$hostName is too busy. Please try again later. Error: $errorVar"
 				Continue
@@ -382,14 +394,16 @@ ForEach ($hostName in $hostNames) {
 					Write-Host -ForegroundColor Red "`t`tUnable to create new port group on $hostName. Please try again."
 					Continue
 				}
-			} Catch {
+			}
+			Catch {
 				If ( $errorVar -Like "*busy*" ) {
 					Write-Host -ForegroundColor Red "`t`t$hostName is too busy. Please try again later. Error: $errorVar"
 					Continue
 				}
 			}
 		}
-	} Catch {
+	}
+ Catch {
 		Try {
 			Write-Host "`t`tCreating new port group on $hostName (~10 sec)"
 			$mgmtPg = New-VirtualPortGroup -VirtualSwitch $svs -Name $mgmtPgName
@@ -397,7 +411,8 @@ ForEach ($hostName in $hostNames) {
 				Write-Host -ForegroundColor Red "`t`tUnable to create new port group on $hostName. Please try again."
 				Continue
 			}
-		} Catch {
+		}
+		Catch {
 			If ( $errorVar -Like "*busy*" ) {
 				Write-Host -ForegroundColor Red "`t`t$hostName is too busy. Please try again later. Error: $errorVar"
 				Continue
@@ -422,7 +437,8 @@ ForEach ($hostName in $hostNames) {
 				Write-Host "`t`tPausing 10 seconds for $hostName to quiesce after removing $vmkName..."
 				Start-Sleep -Seconds 10
 			}
-		} Catch {
+		}
+		Catch {
 			Write-Host -ForegroundColor Yellow "`t`t$vmkName already removed."
 		}
 	}
@@ -432,7 +448,8 @@ ForEach ($hostName in $hostNames) {
 		$vmk0 = $vmhost | Get-VMHostNetworkAdapter -VMKernel -Name 'vmk0' -VirtualSwitch $vds -ErrorAction SilentlyContinue
 		If ( $vmk0 -eq $Null ) {
 			Write-Host -ForegroundColor Yellow "`t`t$hostName vmk0 already migrated off of $vdsName."
-		} Else {
+		}
+		Else {
 			Write-Host "`t`tMigrating $hostName vmk0 to $svsName (~30 sec)"
 			$svs = Get-VirtualSwitch -Standard -VMHost $vmhost -Name $svsName -ErrorAction SilentlyContinue
 			$pNic1 = Get-VMHostNetworkAdapter -VMHost $vmhost -Physical -Name "vmnic1" -VirtualSwitch $svs
@@ -448,9 +465,10 @@ ForEach ($hostName in $hostNames) {
 			}
 			Start-Sleep -Seconds 30
 		}
-	} Catch {
-			Write-Host -ForegroundColor Red "`t`tUnable to migrate $hostName vmk0 off of $vdsName. Please try again. Error: $errorVar"
-			Continue
+	}
+ Catch {
+		Write-Host -ForegroundColor Red "`t`tUnable to migrate $hostName vmk0 off of $vdsName. Please try again. Error: $errorVar"
+		Continue
 	}
 	
 	#Remove vmnic0 from vDS
@@ -462,7 +480,8 @@ ForEach ($hostName in $hostNames) {
 			Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic0 from $vdsName. Please try again."
 			Continue
 		}
-	} Catch {
+	}
+ Catch {
 		Write-Host -ForegroundColor Red "`t`tUnable to remove vmnic0 from $vdsName. Please try again. Error: $errorVar"
 		Continue
 	}
@@ -475,7 +494,8 @@ ForEach ($hostName in $hostNames) {
 			Write-Host -ForegroundColor Red "`t`tUnable to remove $hostName from $vdsName. Please try again."
 			Continue
 		}
-	} Catch {
+	}
+ Catch {
 		Write-Host -ForegroundColor Red "`t`tUnable to remove $hostName from $vdsName. Please try again. Error: $errorVar"
 		Continue
 	}
@@ -488,9 +508,9 @@ ForEach ($hostName in $hostNames) {
 		#Remove puTTY session for this host
 		$sessions = Get-ChildItem $puttyPath
 		Write-Host "`tRemoving $hostName from puTTY"
-		ForEach( $session in $sessions ) {
-			if( $($session.name) -match $vmhost.Name ) {
-				$delPath = $session.Name -replace 'HKEY_CURRENT_USER','HKCU:'
+		ForEach ( $session in $sessions ) {
+			if ( $($session.name) -match $vmhost.Name ) {
+				$delPath = $session.Name -replace 'HKEY_CURRENT_USER', 'HKCU:'
 				Remove-Item -LiteralPath $delPath -Confirm:$false -ErrorAction Continue
 			}
 		}

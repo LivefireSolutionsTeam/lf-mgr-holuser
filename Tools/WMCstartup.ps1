@@ -21,7 +21,8 @@ While ( $true ) {
 		Write-Output "Restarting VMware Tools..."
 		Start-Service -Name "VMTools"
 		Break
-	} Catch {
+	}
+ Catch {
 		Write-Output "Could not start VMware Tools. Will try again..."
 	}
 	Sleep $sleep_seconds

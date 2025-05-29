@@ -1,17 +1,17 @@
 Function Enable-InternetProxy {
 	[CmdletBinding()]
 	PARAM(
-		[Parameter(Mandatory=$True,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+		[Parameter(Mandatory = $True, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
 		[String[]]$Proxy,
 		
-		[Parameter(Mandatory=$False,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+		[Parameter(Mandatory = $False, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
 		[AllowEmptyString()]
 		[String[]]$Override
 
 	)
 	
 	BEGIN {
-		$regKey="HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+		$regKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 	}
 	
 	PROCESS {

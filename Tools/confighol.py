@@ -1,4 +1,4 @@
-# confighol.py version 1.9 07-May 2025
+# confighol.py version 1.13 22-May 2025
 import os
 import glob
 from pyVim import connect
@@ -72,13 +72,35 @@ vcenters = []
 if 'vCenters' in lsf.config['RESOURCES'].keys():
     vcenters = lsf.config.get('RESOURCES', 'vCenters').split('\n')
 
+# need to connect to vCenters in order to enable ssh on ESXi hosts
+if vcenters:
+    lsf.connect_vcenters(vcenters)
+
+esx_hosts = []
+if 'ESXiHosts' in lsf.config['RESOURCES'].keys():
+    esx_hosts = lsf.config.get('RESOURCES', 'ESXiHosts').split('\n')
+
+if esx_hosts:
+    for entry in esx_hosts:
+        (host, mm) = entry.split(':')
+        while True:
+            if lsf.test_ping(host):
+                lsf.connect_vc(host, 'root', lsf.password)
+                lsf.enable_ssh_on_esx(host)
+                lsf.scp(local_auth_file, f'root@{host}:{esx_auth_file}', lsf.password)
+                lsf.ssh(f'chmod 600 {esx_auth_file}', f'root@{host}', lsf.password)
+                lsf.update_session_timeout(host, 0)
+                print(f'Setting non-expiring password for root on {host}')
+                lsf.ssh('chage -M 9999 root', f'root@{host}', lsf.password)
+                break # go on to the next host
+
 for entry in vcenters:
     (vc_host, vc_type, user) = entry.split(':')
     vcshell = False
     answer = input(f'Enter "y" if you need to enable shell and browser support warning on {vc_host} (n):')
     if "y" in answer:
         print(f'enabling shell on {vc_host}...')
-        lsf.run_command(f'/usr/bin/expect ~/hol/Tools/vcshell.exp {vc_hos} {lsf.password}')
+        lsf.run_command(f'/usr/bin/expect ~/hol/Tools/vcshell.exp {vc_host} {lsf.password}')
 
         print(f'enabling ssh auth for manager and LMC on {vc_host}')
         lsf.scp(local_auth_file, f'root@{vc_host}:{auth_file}', lsf.password)
@@ -105,50 +127,30 @@ for entry in vcenters:
     print(f'Setting non-expiring password for root on {vc_host}')
     lsf.ssh('chage -M -1 root', f'root@{vc_host}', lsf.password)
     print(f'Disabling HA Admission Control and configuring DRS to be partially automated on {vc_host}...')
-    lsf.run_command(f'pwsh -File configholcluster.ps1 {vc_host} {user} {lsf.password}')
+    print(f'Configuring local accounts and password policies on {vc_host}...')
+    lsf.run_command(f'pwsh -File configvsphere.ps1 {vc_host} {user} {lsf.password}')
     print(f'Clearing arp cache for {vc_host}...')
     lsf.ssh('ip -s -s neigh flush all', f'root@{vc_host}', lsf.password)
 
-# need to connect to vCenters in order to enable ssh on ESXi hosts
-if vcenters:
-    lsf.connect_vcenters(vcenters)
-
-esx_hosts = []
-if 'ESXiHosts' in lsf.config['RESOURCES'].keys():
-    esx_hosts = lsf.config.get('RESOURCES', 'ESXiHosts').split('\n')
-
-if esx_hosts:
-    for entry in esx_hosts:
-        (host, mm) = entry.split(':')
-        while True:
-            if lsf.test_ping(host):
-                lsf.enable_ssh_on_esx(host)
-                # lsf.test_esx()
-                lsf.scp(local_auth_file, f'root@{host}:{esx_auth_file}', lsf.password)
-                lsf.ssh(f'chmod 600 {esx_auth_file}', f'root@{host}', lsf.password)
-                lsf.update_session_timeout(host, 0)
-                print(f'Setting non-expiring password for root on {host}')
-                lsf.ssh('chage -M 9999 root', f'root@{host}', lsf.password)
-                break # go on to the next host
-
 # NSX stuff
-vcfnsxmgr = []
-if 'vcfnsxmgr' in lsf.config['VCF'].keys():
-    vcfnsxmgrs = lsf.config.get('VCF', 'vcfnsxmgr').split('\n')
-    for entry in vcfnsxmgrs:
-        (nsxmgr, esxhost) = entry.split(':')
-        answer = input(f'Enter "y" if ssh is enabled on {nsxmgr} (n):')
-        if "y" in answer:
-            process_nsx_node(nsxmgr)
+if 'VCF' in lsf.config:
+    vcfnsxmgr = []
+    if 'vcfnsxmgr' in lsf.config['VCF'].keys():
+        vcfnsxmgrs = lsf.config.get('VCF', 'vcfnsxmgr').split('\n')
+        for entry in vcfnsxmgrs:
+            (nsxmgr, esxhost) = entry.split(':')
+            answer = input(f'Enter "y" if ssh is enabled on {nsxmgr} (n):')
+            if "y" in answer:
+                process_nsx_node(nsxmgr)
 
-vcfnsxedges = []
-if 'vcfnsxedges' in lsf.config['VCF'].keys():
-    vcfnsxedges = lsf.config.get('VCF', 'vcfnsxedges').split('\n')
-    for entry in vcfnsxedges:
-        (nsxedge, esxhost) = entry.split(':')
-        answer = input(f'Enter "y" if ssh is enabled on {nsxedge} (n):')
-        if "y" in answer:
-            process_nsx_node(nsxedge)
+    vcfnsxedges = []
+    if 'vcfnsxedges' in lsf.config['VCF'].keys():
+        vcfnsxedges = lsf.config.get('VCF', 'vcfnsxedges').split('\n')
+        for entry in vcfnsxedges:
+            (nsxedge, esxhost) = entry.split(':')
+            answer = input(f'Enter "y" if ssh is enabled on {nsxedge} (n):')
+            if "y" in answer:
+                process_nsx_node(nsxedge)
 
 # Remove password expiry for vcf, backup and root on sddcmanager-a
 sddcmgr = 'sddcmanager-a.site-a.vcf.lab'
@@ -159,6 +161,21 @@ lsf.ssh('chmod 600 ~/.ssh/authorized_keys', f'vcf@{sddcmgr}', lsf.password)
 print(f'configuring non-expiring passwords on {sddcmgr} for vcf, backup and root accounts...')
 lsf.run_command(f'/usr/bin/expect ~/hol/Tools/sddcmgr.exp {sddcmgr} {lsf.password}')
 
+# OPs stuff
+opsvms = []
+if 'VMs' in lsf.config['RESOURCES'].keys():
+    vms = lsf.config.get('RESOURCES', 'VMs').split('\n')
+    for vm in vms:
+        if "ops" in vm:
+            (ops, vc) = vm.split(':')
+            opsvms.append(ops)
+
+for opsvm in opsvms:
+    print(f'Setting non-expiring password for root on {opsvm}')
+    lsf.ssh('chage -M -1 root', f'root@{opsvm}', lsf.password)
+    print(f'enabling ssh auth for manager and LMC on {opsvm}')
+    lsf.scp(local_auth_file, f'root@{opsvm}:{auth_file}', lsf.password)
+    lsf.ssh(f'chmod 600 {auth_file}', f'root@{opsvm}', lsf.password)
 
 # arp cache stuff in console and router (Cannot do Manager except as root)
 for machine in ["console", "router"]:
