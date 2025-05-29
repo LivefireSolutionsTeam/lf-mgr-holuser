@@ -237,22 +237,22 @@ yearrepo="${gitdrive}/20${year}-labs"
 vpodgitdir="${yearrepo}/${year}${index}"
 vpodgit="${vpodgitdir}/.git"
 
-if [ $labtype = "HOL" ];then
+if [ "$labtype" = "HOL" ] || [ "$labtype" = "Discovery" ];then
    # use git clone if local git repo is new else git pull for existing local repo
-   if [ ! -e ${yearrepo} ] || [ ! -e ${vpodgitdir} ];then
+   if [ ! -e "${yearrepo}" ] || [ ! -e "${vpodgitdir}" ];then
       echo "Creating new git repo for ${vPod_SKU}..." >> ${logfile}
-      mkdir $yearrepo > /dev/null 2>&1   
+      mkdir "$yearrepo" > /dev/null 2>&1   
       # if $vpodgitdir not exist git complains about fatal error
       # but the remote add but still completes so hide the error
-      git_clone $yearrepo > /dev/null 2>&1
+      git_clone "$yearrepo" > /dev/null 2>&1
       if [ $? != 0 ];then
          echo "The git project ${vpodgit} does not exist." >> ${logfile}
-         echo "FAIL - No GIT Project" > $startupstatus
+         echo "FAIL - No GIT Project" > "$startupstatus"
          exit 1
       fi
    else
       echo "Performing git pull for repo ${vpodgit}" >> ${logfile}
-      git_pull $vpodgitdir
+      git_pull "$vpodgitdir"
    fi
    if [ $? = 0 ];then
       echo "${vPod_SKU} git operations were successful." >> ${logfile}
@@ -261,46 +261,46 @@ if [ $labtype = "HOL" ];then
    fi 
 fi
 
-if [ -f ${vpodgitdir}/config.ini ];then
-   cp ${vpodgitdir}/config.ini ${configini}
+if [ -f "${vpodgitdir}"/config.ini ];then
+   cp "${vpodgitdir}"/config.ini ${configini}
 fi
 
 # push the default router files for proxy filtering and iptables
 if [ "${labtype}" = "HOL" ];then
    # the router applies when the files arrive
    echo "Pushing default router files..." >> ${logfile}
-   /usr/bin/sshpass -p ${password} scp -o $sshoptions -r ${holroot}/${router} holuser@router:/tmp
+   /usr/bin/sshpass -p "${password}" scp -o $sshoptions -r ${holroot}/"${router}" holuser@router:/tmp
 else
    echo "Pushing $labtype router files..." >> ${logfile}
-   /usr/bin/sshpass -p ${password} ssh -o $sshoptions holuser@router mkdir /tmp/holorouter
-   /usr/bin/sshpass -p ${password} scp -o $sshoptions ${holroot}/${router}/nofirewall.sh holuser@router:/tmp/holorouter/iptablescfg.sh
-   /usr/bin/sshpass -p ${password} scp -o $sshoptions ${holroot}/${router}/allowall holuser@router:/tmp/holorouter/allowlist
+   /usr/bin/sshpass -p "${password}" ssh -o $sshoptions holuser@router mkdir /tmp/holorouter
+   /usr/bin/sshpass -p "${password}" scp -o $sshoptions ${holroot}/"${router}"/nofirewall.sh holuser@router:/tmp/holorouter/iptablescfg.sh
+   /usr/bin/sshpass -p "${password}" scp -o $sshoptions ${holroot}/"${router}"/allowall holuser@router:/tmp/holorouter/allowlist
 fi
 
 # get the vPod_SKU router files to the hol folder which overwrites the Core Team default files (except allowlist)
 skurouterfiles="${yearrepo}/${year}${index}/${router}"
-if [ -d ${skurouterfiles} ] && [ "${labtype}" = "HOL" ];then
+if [ -d "${skurouterfiles}" ] && [ "${labtype}" = "HOL" ];then
    if [ "${labtype}" = "HOL" ];then
       echo "Updating router files from ${vPod_SKU}."  >> ${logfile}
       # concatenate the allowlist files
-      cp -r ${skurouterfiles} /tmp
-      cat ${holroot}/${router}/allowlist ${skurouterfiles}/allowlist | sort | uniq > /tmp/${router}/allowlist
-      /usr/bin/sshpass -p ${password} scp -o ${sshoptions} -r /tmp/${router} holuser@router:/tmp
+      cp -r "${skurouterfiles}" /tmp
+      cat ${holroot}/"${router}"/allowlist "${skurouterfiles}"/allowlist | sort | uniq > /tmp/"${router}"/allowlist
+      /usr/bin/sshpass -p "${password}" scp -o ${sshoptions} -r /tmp/"${router}" holuser@router:/tmp
    fi
 elif [ "${labtype}" = "HOL" ];then
    echo "Using default Core Team router files only."  >> ${logfile}
 fi
 # alert the router that the git pull is complete so files are applied
-/usr/bin/sshpass -p ${password} ssh -o ${sshoptions} holuser@router "> /tmp/${router}/gitdone"
+/usr/bin/sshpass -p "${password}" ssh -o ${sshoptions} holuser@router "> /tmp/${router}/gitdone"
 
 # note that the gitlab pull is complete
-> /tmp/gitdone
+touch /tmp/gitdone #> /tmp/gitdone
 
 if [ -f ${configini} ];then
    runlabstartup
    echo "$0 finished." >> ${logfile}
 else
    echo "No config.ini on Main Console or vpodrepo. Abort." >> ${logfile}
-   echo "FAIL - No Config" > $startupstatus
+   echo "FAIL - No Config" > "$startupstatus"
    exit 1
 fi 
