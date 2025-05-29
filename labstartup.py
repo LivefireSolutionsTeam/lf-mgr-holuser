@@ -1,4 +1,4 @@
-# labstartup.py - version 2.1 - 15-April 2025
+# labstartup.py - version 2.2 - 24-April 2025
 
 import datetime
 import os

@@ -1,5 +1,5 @@
 #! /bin/sh
-# version 1.3 - 08-May 2025
+# version 1.4 - 09-May 2025
 
 # the only job of this script is to do the initial Core Team git pull
 # and then call the lastest versions of VLPagent.sh and labstartup.sh

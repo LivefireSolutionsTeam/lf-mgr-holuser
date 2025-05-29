@@ -1,6 +1,6 @@
 #!/bin/bash
-#  29-April 2025 # Apply shellcheck fixes
-AGENT_URL="https://content.labplatform.vmware.com/api/storage/file/NEE/agent/vlp-agent-"
+#  29-May 2025 # Update Agent url 
+AGENT_URL="https://content.labplatform.broadcom.com/api/storage/file/NEE/agent/vlp-agent-"
 
 AGENT_DIR=vlp-agent
 HR="-------------------------------------------------------------------------------------------------------------------------------"
@@ -47,7 +47,7 @@ show_help() {
 # Function to start the agent
 operation_start() {
     echo ""
-    cd $AGENT_DIR
+    cd $AGENT_DIR || exit
     echo $HR
     echo "Starting VLP Agent."
     echo $HR
@@ -57,7 +57,7 @@ operation_start() {
 # Function to start the agent
 operation_stop() {
     echo $HR
-    cd $AGENT_DIR
+    cd $AGENT_DIR || exit
     echo "Stopping VLP Agent."
     echo $HR
     ./vlp-agent-stop.sh
