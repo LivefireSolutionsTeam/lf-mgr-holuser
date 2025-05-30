@@ -31,9 +31,9 @@ fi
 
 
 gitdrive=/vpodrepo
-prepopstart=/tmp/prepop.txt
+#prepopstart=/tmp/prepop.txt
 prepopstartscript=prepopstart.sh
-labstart=/tmp/labstart.txt
+#labstart=/tmp/labstart.txt
 labstartscript=labstart.sh
 vlpagentdir=/home/holuser/hol/vlp-agent
 
@@ -65,14 +65,14 @@ fi
 get_vpod_repo
 # start the watcher loop waiting for the vlpagent.txt when lab starts
 while true;do
-   if [ -f  ${prepopstart} ];then
+   if [ -f  /tmp/prepop.txt ];then
       # note that this will run at prepop start
       echo "Received prepop start notification. Running ${vpodgitdir}/${prepopstartscript}" >> ${logfile}
       # verify that the script files exists and is executable
       if [ -f "${vpodgitdir}"/${prepopstartscript} ] && [ -x "${vpodgitdir}"/${prepopstartscript} ];then
          /bin/sh "${vpodgitdir}"/${prepopstartscript}
       fi
-   elif [ -f ${labstart} ];then
+   elif [ -f /tmp/labstart.txt ];then
       # if labcheck is running - kill it.
 	  pid=$(ps -ef | grep labstartup.py | grep -v grep | awk '{print $2}')
       if [ ! -z "${pid}" ];then
